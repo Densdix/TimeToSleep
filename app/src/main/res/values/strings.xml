@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">TimeToSleep</string>
+    <string name="time_to_sleep">%1$s:%2$s:%3$s</string>
+    <string name="sleep_time">%1$s:%2$s</string>
+    <string name="empty_timer">00:00:00</string>
+    <string name="empty_timer_without_sec">00:00</string>
+    <string name="button_description">Button for start and stop timer.</string>
+    <string name="sleep_image_description">Sleep image</string>
+
 </resources>

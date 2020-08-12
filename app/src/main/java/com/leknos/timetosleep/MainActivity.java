@@ -1,6 +1,5 @@
 package com.leknos.timetosleep;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -11,7 +10,6 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -52,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
             sleepMinute = 15;
         }
         //default by first run
-        timeSleep.setText(timeWithNull(sleepHour)+":"+timeWithNull(sleepMinute));
+        timeSleep.setText(getString(R.string.sleep_time, timeWithNull(sleepHour), timeWithNull(sleepMinute)));
 
         timeSleep.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                         sleepHour = hourOfDay;
                         sleepMinute = minute;
-                        timeSleep.setText(timeWithNull(hourOfDay)+":"+timeWithNull(minute));
+                        timeSleep.setText(getString(R.string.sleep_time, timeWithNull(sleepHour), timeWithNull(sleepMinute)));
                         Toast.makeText(MainActivity.this, "You successfully choose sleep time", Toast.LENGTH_SHORT).show();
                     }
                 }, dateAndTime.get(Calendar.HOUR_OF_DAY), dateAndTime.get(Calendar.MINUTE), true).show();
@@ -136,9 +134,8 @@ public class MainActivity extends AppCompatActivity {
                 int minutes = (int) ((millisUntilFinished / (1000*60)) % 60);
                 int hours   = (int) ((millisUntilFinished / (1000*60*60)) % 24);
 
-                timeToSleep.setText(timeWithNull(hours) +
-                        ":" + timeWithNull(minutes) +
-                        ":" + timeWithNull(seconds));
+                String timer = getString(R.string.time_to_sleep, timeWithNull(hours), timeWithNull(minutes), timeWithNull(seconds));
+                timeToSleep.setText(timer);
             }
 
             @Override
@@ -147,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
                 isTimerRunning = false;
                 //button.setText("RUN");
                 button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_start));
-                timeToSleep.setText("00:00:00");
+                timeToSleep.setText(getString(R.string.empty_timer));
                 Intent intentVibrate = new Intent(getApplicationContext(),VibrateService.class);
                 startService(intentVibrate);
             }
