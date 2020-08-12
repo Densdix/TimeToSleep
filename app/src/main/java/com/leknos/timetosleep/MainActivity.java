@@ -2,29 +2,28 @@ package com.leknos.timetosleep;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Chronometer;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
-
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
+
 
 public class MainActivity extends AppCompatActivity {
     private TextView timeToSleep;
     private TextView timeSleep;
-    private Button button;
+    private ImageButton button;
     private Calendar dateAndTime = Calendar.getInstance();
     private SharedPreferences sharedPreferences;
 
@@ -53,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
             sleepMinute = 15;
         }
         //default by first run
-        timeSleep.setText(sleepHour+":"+sleepMinute);
+        timeSleep.setText(timeWithNull(sleepHour)+":"+timeWithNull(sleepMinute));
 
         timeSleep.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                         sleepHour = hourOfDay;
                         sleepMinute = minute;
-                        timeSleep.setText(hourOfDay+":"+minute);
+                        timeSleep.setText(timeWithNull(hourOfDay)+":"+timeWithNull(minute));
                         Toast.makeText(MainActivity.this, "You successfully choose sleep time", Toast.LENGTH_SHORT).show();
                     }
                 }, dateAndTime.get(Calendar.HOUR_OF_DAY), dateAndTime.get(Calendar.MINUTE), true).show();
@@ -76,16 +75,16 @@ public class MainActivity extends AppCompatActivity {
                 if(!isTimerRunning){
                     downTimerStart(calcTimeToSleep());
                     isTimerRunning = true;
-                    button.setText("STOP");
+                    button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_stop));
+                    //button.setText("STOP");
                 }else {
                     countDownTimer.cancel();
                     isTimerRunning = false;
-                    button.setText("RUN");
+                    button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_start));
+                    //button.setText("RUN");
                 }
             }
         });
-
-
     }
 
     public long calcTimeToSleep(){
@@ -95,43 +94,62 @@ public class MainActivity extends AppCompatActivity {
         int date = dateAndTime.get(Calendar.DATE);
         int hour = dateAndTime.get(Calendar.HOUR_OF_DAY);
         int minute = dateAndTime.get(Calendar.MINUTE);
-        int second = dateAndTime.get(Calendar.SECOND);
-        int sleepDate = hour;
 
-        Timestamp currentMilliseconds = new Timestamp(year, month, date, hour, minute, second, 0);
+        int sleepDate = date;
 
+        //calc current time in millis
+        long currentMilliseconds = dateAndTime.getTimeInMillis();
+        Log.d("DIMA", "currentMilliseconds: "+currentMilliseconds);
 
-        if(sleepHour < hour){
-            if(sleepMinute < minute){
+//        long timeZone = dateAndTime.getTimeZone().getOffset(currentMilliseconds);
+//        Log.d("DIMA", "timeZone: "+timeZone);
+//
+//        long currentLocalMilliseconds = currentMilliseconds + timeZone;
+//        Log.d("DIMA", "currentLocalMilliseconds: "+currentLocalMilliseconds);
+
+        if(sleepHour <= hour){
+            if(sleepMinute <= minute){
                 sleepDate++;
             }
         }
 
-        Timestamp sleepMilliseconds = new Timestamp(year, month, sleepDate, sleepHour, sleepMinute, 0, 0);
+        Log.d("DIMA", "date: "+date);
+        Log.d("DIMA", "sleepDate: "+sleepDate);
 
-        long currentUTCTime = sleepMilliseconds.getTime() - currentMilliseconds.getTime();
-        int TimeZoneTime = dateAndTime.getTimeZone().getOffset(currentUTCTime);
+        dateAndTime.set(year, month, sleepDate, sleepHour, sleepMinute, 0);
 
-        Timestamp timeToSleepMilliseconds = new Timestamp(currentUTCTime - TimeZoneTime);
-        return timeToSleepMilliseconds.getTime();
+        long sleepMilliseconds = dateAndTime.getTimeInMillis();
+        Log.d("DIMA", "sleepMilliseconds: "+sleepMilliseconds);
 
-        //timeToSleep.setText(timeToSleepMilliseconds.getHours() + "|"+timeToSleepMilliseconds.getMinutes()+"|"+timeToSleepMilliseconds.getSeconds());
+        long timeToSleep = sleepMilliseconds - currentMilliseconds;
+        Log.d("DIMA", "timeToSleep: "+timeToSleep);
 
+        return timeToSleep;
     }
 
     public void downTimerStart(long millisTime){
         countDownTimer = new CountDownTimer(millisTime, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                Timestamp millisTimeLost = new Timestamp(millisUntilFinished);
-                timeToSleep.setText(timeWithNull(millisTimeLost.getHours()) +
-                        ":" + timeWithNull(millisTimeLost.getMinutes()) +
-                        ":" + timeWithNull(millisTimeLost.getSeconds()));
+
+                int seconds = (int) (millisUntilFinished / 1000) % 60 ;
+                int minutes = (int) ((millisUntilFinished / (1000*60)) % 60);
+                int hours   = (int) ((millisUntilFinished / (1000*60*60)) % 24);
+
+                timeToSleep.setText(timeWithNull(hours) +
+                        ":" + timeWithNull(minutes) +
+                        ":" + timeWithNull(seconds));
             }
 
             @Override
             public void onFinish() {
                 countDownTimer.cancel();
+                isTimerRunning = false;
+                //button.setText("RUN");
+                button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_start));
+                timeToSleep.setText("00:00:00");
+                Intent intentVibrate = new Intent(getApplicationContext(),VibrateService.class);
+                startService(intentVibrate);
             }
         };
 
