@@ -29,6 +29,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean isTimerRunning;
     public static final String SLEEP_HOUR_TIME = "hour_time";
     public static final String SLEEP_MINUTE_TIME = "minute_time";
+    public static final String TAG = "utest";
+
+
 
     private int sleepHour;
     private int sleepMinute;
@@ -62,6 +65,10 @@ public class MainActivity extends AppCompatActivity {
                         sleepMinute = minute;
                         timeSleep.setText(getString(R.string.sleep_time, timeWithNull(sleepHour), timeWithNull(sleepMinute)));
                         Toast.makeText(MainActivity.this, "You successfully choose sleep time", Toast.LENGTH_SHORT).show();
+                        if(isTimerRunning){
+                            countDownTimer.cancel();
+                            downTimerStart(calcTimeToSleep());
+                        }
                     }
                 }, dateAndTime.get(Calendar.HOUR_OF_DAY), dateAndTime.get(Calendar.MINUTE), true).show();
             }
@@ -74,12 +81,10 @@ public class MainActivity extends AppCompatActivity {
                     downTimerStart(calcTimeToSleep());
                     isTimerRunning = true;
                     button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_stop));
-                    //button.setText("STOP");
                 }else {
                     countDownTimer.cancel();
                     isTimerRunning = false;
                     button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_start));
-                    //button.setText("RUN");
                 }
             }
         });
@@ -97,13 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
         //calc current time in millis
         long currentMilliseconds = dateAndTime.getTimeInMillis();
-        Log.d("DIMA", "currentMilliseconds: "+currentMilliseconds);
-
-//        long timeZone = dateAndTime.getTimeZone().getOffset(currentMilliseconds);
-//        Log.d("DIMA", "timeZone: "+timeZone);
-//
-//        long currentLocalMilliseconds = currentMilliseconds + timeZone;
-//        Log.d("DIMA", "currentLocalMilliseconds: "+currentLocalMilliseconds);
+        Log.d(TAG, "currentMilliseconds: "+currentMilliseconds);
 
         if(sleepHour <= hour){
             if(sleepMinute <= minute){
@@ -111,16 +110,16 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        Log.d("DIMA", "date: "+date);
-        Log.d("DIMA", "sleepDate: "+sleepDate);
+        Log.d(TAG, "date: "+date);
+        Log.d(TAG, "sleepDate: "+sleepDate);
 
         dateAndTime.set(year, month, sleepDate, sleepHour, sleepMinute, 0);
 
         long sleepMilliseconds = dateAndTime.getTimeInMillis();
-        Log.d("DIMA", "sleepMilliseconds: "+sleepMilliseconds);
+        Log.d(TAG, "sleepMilliseconds: "+sleepMilliseconds);
 
         long timeToSleep = sleepMilliseconds - currentMilliseconds;
-        Log.d("DIMA", "timeToSleep: "+timeToSleep);
+        Log.d(TAG, "timeToSleep: "+timeToSleep);
 
         return timeToSleep;
     }
@@ -142,7 +141,6 @@ public class MainActivity extends AppCompatActivity {
             public void onFinish() {
                 countDownTimer.cancel();
                 isTimerRunning = false;
-                //button.setText("RUN");
                 button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_start));
                 timeToSleep.setText(getString(R.string.empty_timer));
                 Intent intentVibrate = new Intent(getApplicationContext(),VibrateService.class);
