@@ -17,6 +17,8 @@ import android.widget.Toast;
 import java.util.Calendar;
 import java.util.Date;
 
+import static com.leknos.timetosleep.Utils.timeWithNull;
+
 
 public class MainActivity extends AppCompatActivity {
     private TextView timeToSleep;
@@ -24,18 +26,14 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton button;
     private Calendar dateAndTime = Calendar.getInstance();
     private SharedPreferences sharedPreferences;
+    private SleepTimer sleepTimer;
 
-    private CountDownTimer countDownTimer;
-    private boolean isTimerRunning;
     public static final String SLEEP_HOUR_TIME = "hour_time";
     public static final String SLEEP_MINUTE_TIME = "minute_time";
-    public static final String TAG = "utest";
-
-
+    public static final String TAG = "MyMainActivity";
 
     private int sleepHour;
     private int sleepMinute;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,22 +50,27 @@ public class MainActivity extends AppCompatActivity {
             sleepHour = 23;
             sleepMinute = 15;
         }
+        //init timer
+        sleepTimer = new SleepTimer(this, sleepHour, sleepMinute);
+
         //default by first run
         timeSleep.setText(getString(R.string.sleep_time, timeWithNull(sleepHour), timeWithNull(sleepMinute)));
 
         timeSleep.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dateAndTime.setTime(new Date());
                 new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                         sleepHour = hourOfDay;
                         sleepMinute = minute;
+                        sleepTimer.setSleepHour(sleepHour);
+                        sleepTimer.setSleepMinute(sleepMinute);
                         timeSleep.setText(getString(R.string.sleep_time, timeWithNull(sleepHour), timeWithNull(sleepMinute)));
                         Toast.makeText(MainActivity.this, "You successfully choose sleep time", Toast.LENGTH_SHORT).show();
-                        if(isTimerRunning){
-                            countDownTimer.cancel();
-                            downTimerStart(calcTimeToSleep());
+                        if(sleepTimer.isTimerRunning()){
+                            sleepTimer.reloadTimer();
                         }
                     }
                 }, dateAndTime.get(Calendar.HOUR_OF_DAY), dateAndTime.get(Calendar.MINUTE), true).show();
@@ -77,86 +80,28 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!isTimerRunning){
-                    downTimerStart(calcTimeToSleep());
-                    isTimerRunning = true;
-                    button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_stop));
-                }else {
-                    countDownTimer.cancel();
-                    isTimerRunning = false;
-                    button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_start));
+                if (sleepTimer.isTimerRunning()) {
+                    sleepTimer.stopTimer();
+                } else {
+                    sleepTimer.startTimer();
                 }
+                changeButtonBackground(sleepTimer.isTimerRunning());
             }
         });
+
     }
 
-    public long calcTimeToSleep(){
-        dateAndTime.setTime(new Date());
-        int year = dateAndTime.get(Calendar.YEAR);
-        int month = dateAndTime.get(Calendar.MONTH);
-        int date = dateAndTime.get(Calendar.DATE);
-        int hour = dateAndTime.get(Calendar.HOUR_OF_DAY);
-        int minute = dateAndTime.get(Calendar.MINUTE);
-
-        int sleepDate = date;
-
-        //calc current time in millis
-        long currentMilliseconds = dateAndTime.getTimeInMillis();
-        Log.d(TAG, "currentMilliseconds: "+currentMilliseconds);
-
-        if(sleepHour <= hour){
-            if(sleepMinute <= minute){
-                sleepDate++;
-            }
-        }
-
-        Log.d(TAG, "date: "+date);
-        Log.d(TAG, "sleepDate: "+sleepDate);
-
-        dateAndTime.set(year, month, sleepDate, sleepHour, sleepMinute, 0);
-
-        long sleepMilliseconds = dateAndTime.getTimeInMillis();
-        Log.d(TAG, "sleepMilliseconds: "+sleepMilliseconds);
-
-        long timeToSleep = sleepMilliseconds - currentMilliseconds;
-        Log.d(TAG, "timeToSleep: "+timeToSleep);
-
-        return timeToSleep;
-    }
-
-    public void downTimerStart(long millisTime){
-        countDownTimer = new CountDownTimer(millisTime, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-
-                int seconds = (int) (millisUntilFinished / 1000) % 60 ;
-                int minutes = (int) ((millisUntilFinished / (1000*60)) % 60);
-                int hours   = (int) ((millisUntilFinished / (1000*60*60)) % 24);
-
-                String timer = getString(R.string.time_to_sleep, timeWithNull(hours), timeWithNull(minutes), timeWithNull(seconds));
-                timeToSleep.setText(timer);
-            }
-
-            @Override
-            public void onFinish() {
-                countDownTimer.cancel();
-                isTimerRunning = false;
-                button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_start));
-                timeToSleep.setText(getString(R.string.empty_timer));
-                Intent intentVibrate = new Intent(getApplicationContext(),VibrateService.class);
-                startService(intentVibrate);
-            }
-        };
-
-        countDownTimer.start();
-    }
-
-    String timeWithNull(int number){
-        if(number < 10){
-            return "0"+number;
+    public void changeButtonBackground(boolean isTimerRunning){
+        if(isTimerRunning){
+            button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_stop));
         }else{
-            return String.valueOf(number);
+            button.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_start));
         }
+    }
+
+
+    public void changeSleepTimerText(String text){
+        timeToSleep.setText(text);
     }
 
     @Override
