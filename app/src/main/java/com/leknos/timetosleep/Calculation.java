@@ -23,10 +23,12 @@ public class Calculation {
         long currentMilliseconds = dateAndTime.getTimeInMillis();
         Log.d(TAG, "currentMilliseconds: "+currentMilliseconds);
 
-        if(sleepHour <= hour){
+        if(sleepHour == hour){
             if(sleepMinute <= minute){
                 sleepDate++;
             }
+        }else if(sleepHour < hour){
+            sleepDate++;
         }
 
         Log.d(TAG, "date: "+date);

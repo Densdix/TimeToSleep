@@ -2,12 +2,6 @@ package com.leknos.timetosleep;
 
 import android.content.Intent;
 import android.os.CountDownTimer;
-import android.util.Log;
-
-import androidx.core.content.ContextCompat;
-
-import java.util.Calendar;
-import java.util.Date;
 
 import static com.leknos.timetosleep.Utils.timeWithNull;
 
@@ -45,10 +39,9 @@ public class SleepTimer {
 
             @Override
             public void onFinish() {
-                countDownTimer.cancel();
-                isTimerRunning = false;
+                stopTimer();
                 activity.changeButtonBackground(isTimerRunning);
-                //timeToSleep.setText(activity.getString(R.string.empty_timer));
+                activity.changeSleepTimerText(activity.getString(R.string.empty_timer));
                 Intent intentVibrate = new Intent(activity.getApplicationContext(),VibrateService.class);
                 activity.startService(intentVibrate);
 
@@ -63,6 +56,11 @@ public class SleepTimer {
         isTimerRunning = false;
     }
 
+    public void reloadTimer(){
+        stopTimer();
+        startTimer();
+    }
+
     public void setSleepHour(int sleepHour) {
         this.sleepHour = sleepHour;
     }
@@ -73,10 +71,5 @@ public class SleepTimer {
 
     public boolean isTimerRunning() {
         return isTimerRunning;
-    }
-
-    public void reloadTimer(){
-        stopTimer();
-        startTimer();
     }
 }
