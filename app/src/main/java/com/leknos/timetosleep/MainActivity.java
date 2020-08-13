@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView timeToSleep;
     private TextView timeSleep;
     private ImageButton button;
-    private Calendar dateAndTime = Calendar.getInstance();
+
     private SharedPreferences sharedPreferences;
     private SleepTimer sleepTimer;
 
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         timeSleep.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dateAndTime.setTime(new Date());
+                Calendar dateAndTime = Calendar.getInstance();
                 new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
